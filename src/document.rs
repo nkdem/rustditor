@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::{fs::File, io::{Read, Write}};
 
 pub struct Document {
     pub filename: String,
@@ -7,27 +7,24 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(filename: String) -> Self {
-        let file = File::create(&filename).expect("Unable to create file");
-        Self {
-            filename,
-            file,
-            content: String::new()
-        }
-    }
-
     pub fn delete(&self) {
         std::fs::remove_file(&self.filename).expect("Unable to delete file");
     }
 
     pub fn open(filename: &String) -> Self{
-        let mut file = File::open(filename).expect("Unable to open file");
+        let mut file = File::open(filename).or_else(|_| File::create(filename)).expect("Unable to open file");
         let mut content = String::new();
         file.read_to_string(&mut content).expect("Unable to read file");
         Self {
             filename: filename.to_string(),
             file,
             content}
+    }
+
+    pub fn update(&mut self, content: String) {
+        self.content = content;
+        self.file.write_all(self.content.as_bytes()).expect("Unable to write file");
+        // TODO: Keep track of undo history
     }
 }
 

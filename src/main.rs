@@ -1,22 +1,35 @@
-use rustditor::{config::Config, document::Document};
+use std::io::{stdout, Read, Write};
+use rustditor::views::open_file::OpenFileView;
+use rustditor::views::view::View;
+use termion::async_stdin;
 use termion::raw::IntoRawMode;
-use std::{io::{Write, stdout}};
+
 
 fn main() {
-    // Enter raw mode.
-    let mut stdout = stdout().into_raw_mode().unwrap();
-    
-    
-    if let Some(config) = Config::new(std::env::args()) {
-        let document = Document::open(&config.filename);
-        println!("Document: {:?}", document.content);
-    } else {
-        todo!("Main Screen")
+    let stdout = stdout();
+    let mut stdout = stdout.lock().into_raw_mode().unwrap();
+    let mut stdin = async_stdin().bytes();
+
+    write!(
+        stdout,
+        "{}{}",
+        termion::clear::All,
+        termion::cursor::Goto(1, 1)
+    )
+    .unwrap();
+    write!(stdout, "\rPress o to open file\n\r").unwrap();
+    write!(stdout, "\rPress q to quit\n\r").unwrap();
+    loop {
+
+        let b = stdin.next();
+        if let Some(Ok(b'q')) = b {
+            break; // quit
+        }
+        if let Some(Ok(b'o')) = b {
+            let view = OpenFileView::new();
+            view.render();
+        }
+
+        stdout.flush().unwrap();
     }
-
-    // Write to stdout (note that we don't use `println!`)
-    write!(stdout, "Hey there.").unwrap();
 }
-
-
-
