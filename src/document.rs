@@ -1,23 +1,33 @@
-use std::{fs::File};
+use std::{fs::File, io::Read};
 
 pub struct Document {
-    filename: String,
-    file: File,
-    content: String
+    pub filename: String,
+    pub file: File,
+    pub content: String
 }
 
 impl Document {
-    fn new(filename: String) -> Document {
+    pub fn new(filename: String) -> Self {
         let file = File::create(&filename).expect("Unable to create file");
-        Document {
+        Self {
             filename,
             file,
             content: String::new()
         }
     }
 
-    fn delete(&self) {
+    pub fn delete(&self) {
         std::fs::remove_file(&self.filename).expect("Unable to delete file");
+    }
+
+    pub fn open(filename: &String) -> Self{
+        let mut file = File::open(filename).expect("Unable to open file");
+        let mut content = String::new();
+        file.read_to_string(&mut content).expect("Unable to read file");
+        Self {
+            filename: filename.to_string(),
+            file,
+            content}
     }
 }
 
