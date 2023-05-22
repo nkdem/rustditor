@@ -1,5 +1,9 @@
 use std::io::{stdin, Read, Write};
 
+use termion::{input::TermRead, event::Key};
+
+use crate::document::Document;
+
 use super::{open_file::OpenFileView, view::View};
 
 pub struct MainMenuView;
@@ -19,19 +23,21 @@ fn main_menu_message(out: &mut impl Write) {
 }
 
 impl View for MainMenuView {
+    type Output = ();
     fn render(&self, out: &mut impl Write) {
         let stdin = stdin();
 
-        let mut bytes = stdin.bytes();
+        let mut bytes = stdin.keys();
         main_menu_message(out);
         loop {
             let b = bytes.next().unwrap().unwrap();
 
             match b {
                 // Quit
-                b'q' => return,
-                b'o' => {
-                    OpenFileView.render(out);
+                Key::Char('q') => break,
+                Key::Char('o') => {
+                    let filename = OpenFileView.render(out);
+                    let doc = Document::open(&filename);
                     main_menu_message(out);
                 }
                 _ => continue,
