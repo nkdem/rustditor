@@ -1,9 +1,6 @@
-use rustditor::views::{main_menu::MainMenuView, view::View};
-use termion::{raw::IntoRawMode, screen::IntoAlternateScreen};
-use std::io::{stdout};
-
-fn main() {
-    let stdout = stdout();
-    let mut stdout = stdout.into_alternate_screen().unwrap().into_raw_mode().unwrap();
-    MainMenuView.render(&mut stdout);
+use rustditor::views::{ screen::Screen, main_menu::MainMenuView};
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut screen = Screen::new(Box::new(MainMenuView));
+    screen.run().unwrap();
+    Ok(())
 }
