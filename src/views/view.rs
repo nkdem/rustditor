@@ -1,4 +1,4 @@
-use std::{io::Write, error::Error, rc::Rc};
+use std::{error::Error};
 
 use termion::event::Key;
 

@@ -1,8 +1,6 @@
 use std::{
     error::Error,
-    io::{stdin, stdout, Write},
-    rc::Rc,
-    sync::Mutex,
+    io::{stdin, stdout}
 };
 
 use termion::{input::TermRead, raw::IntoRawMode, screen::IntoAlternateScreen};
