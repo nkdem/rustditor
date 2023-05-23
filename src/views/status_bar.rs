@@ -38,8 +38,11 @@ impl StatusBar {
                     write!(out, "{}", c)?;
                 },
                 termion::event::Key::Backspace => {
+                    if string.is_empty() {
+                        continue;
+                    }
                     string.pop();
-                    write!(out, "{}{} ", termion::cursor::Left(1), termion::cursor::Left(1))?;
+                    write!(out, "{}{}", termion::cursor::Left(1),termion::clear::AfterCursor)?;
                 },
                 _ => {},
             }

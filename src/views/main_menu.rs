@@ -36,7 +36,7 @@ impl View for MainMenuView {
             termion::event::Key::Char('o') => {
                 let filename = status_bar.get_input("Filename".to_string(), out)?;
                 if filename.len() > 0 {
-                    return Ok(HandleInputResult::View(Box::new(EditorView { filename })));
+                    return Ok(HandleInputResult::View(Box::new(EditorView::new(filename))));
                 } else {
                     Ok(HandleInputResult::Failure)
                 }

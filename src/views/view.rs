@@ -9,6 +9,7 @@ pub enum HandleInputResult {
     Quit,
     Command, // TODO: Implement commands
     View(Box<dyn View>),
+    Handled,
     Unhandled,
     Failure
 }
