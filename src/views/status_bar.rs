@@ -1,6 +1,5 @@
 use termion::input::TermRead;
-use std::{io::Write};
-
+use std::io::{stdout, Write};
 type Out = termion::raw::RawTerminal<termion::screen::AlternateScreen<std::io::Stdout>>;
 
 pub struct StatusBar {

@@ -1,48 +1,45 @@
-use std::{error::Error, io::Write};
+use std::{error::Error, collections::{VecDeque, HashMap}};
 use termion::event::Key;
 
 use crate::views::editor::EditorView;
 
 use super::{
-    status_bar::StatusBar,
-    view::{HandleInputResult, View},
+    view::{HandleInputResult, View, self},
 };
-type Out = termion::raw::RawTerminal<termion::screen::AlternateScreen<std::io::Stdout>>;
 
 pub struct MainMenuView;
 impl View for MainMenuView {
-    fn render(&mut self, out: &mut Out) -> Result<(), Box<dyn Error>> {
-        write!(
-            out,
+    fn generate_rendered_output(&mut self) -> Result<String, Box<dyn Error>> {
+        Ok(format!(
             "{}{}{}Press 'o' to open file, or q to exit program{}{}",
             termion::clear::All,
             termion::cursor::Goto(1, 1),
             termion::style::Bold,
             termion::style::Reset,
             termion::cursor::Goto(1, 2)
-        )
-        .unwrap();
-        out.flush().unwrap();
-        Ok(())
+        ))
     }
 
     fn handle_input(
         &mut self,
-        status_bar: &mut StatusBar,
         key: Key,
-        out: &mut Out,
-    ) -> Result<HandleInputResult, Box<dyn Error>> {
+    ) -> Result<VecDeque<HandleInputResult>, Box<dyn Error>> {
         match key {
             termion::event::Key::Char('o') => {
-                let filename = status_bar.get_input("Filename".to_string(), out)?;
-                if filename.len() > 0 {
-                    return Ok(HandleInputResult::View(Box::new(EditorView::new(filename))));
-                } else {
-                    Ok(HandleInputResult::Failure)
-                }
+                let inputs = vec!["Filename".to_string()];
+                let callback: view::InputHandler = |hashmap| {
+                    let filename = hashmap.get("Filename").unwrap();
+                    if filename.len() > 0 {
+                        Ok(HandleInputResult::singleton(HandleInputResult::View(Box::new(EditorView::new(filename.to_string())))))
+                    } else {
+                        Ok(HandleInputResult::singleton(HandleInputResult::Failure))
+                    }
+                };
+
+                Ok(HandleInputResult::singleton(HandleInputResult::Input(inputs,callback)))
             }
-            termion::event::Key::Char('q') => Ok(HandleInputResult::Quit),
-            _ => Ok(HandleInputResult::Unhandled),
+            termion::event::Key::Char('q') => Ok(HandleInputResult::singleton(HandleInputResult::Quit)),
+            _ => Ok(HandleInputResult::singleton(HandleInputResult::Unhandled)),
         }
     }
 }
