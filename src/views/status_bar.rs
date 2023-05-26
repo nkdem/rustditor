@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use log::trace;
 use termion::event::Key;
 
 use super::view::{HandleInputResult, InputHandler, View};
@@ -11,6 +12,13 @@ pub struct InputMode {
     pub complete: bool,
 }
 
+pub struct EditorMode {
+    pub cursor : (u16, u16), // (x, y)
+    pub file_name: String,
+}
+
+
+
 pub struct StatusBar {
     width: u16,
     height: u16,
@@ -19,7 +27,8 @@ pub struct StatusBar {
 
 pub enum StatusBarMode {
     Inactive,
-    AwaitingInput(InputMode),
+    EditorMode(EditorMode),
+    InputMode(InputMode),
 }
 
 impl StatusBar {
@@ -38,7 +47,7 @@ impl StatusBar {
             output: String::new(),
             complete: false,
         };
-        self.mode = StatusBarMode::AwaitingInput(input_mode);
+        self.mode = StatusBarMode::InputMode(input_mode);
     }
 
     pub fn reset(&mut self) {
@@ -47,7 +56,7 @@ impl StatusBar {
 
     pub fn complete_input(&mut self) -> Option<Result<HandleInputResult, Box<dyn Error>>> {
         match &mut self.mode {
-            StatusBarMode::AwaitingInput(input_mode) => {
+            StatusBarMode::InputMode(input_mode) => {
                 input_mode.complete = true;
                 let res = (input_mode.on_complete)(input_mode.output.clone());
                 Some(res)
@@ -61,13 +70,23 @@ impl View for StatusBar {
     fn generate_rendered_output(&mut self) -> Result<String, Box<dyn std::error::Error>> {
         match &self.mode {
             StatusBarMode::Inactive => Ok(String::new()),
-            StatusBarMode::AwaitingInput(input_mode) => Ok(format!(
+            StatusBarMode::InputMode(input_mode) => Ok(format!(
                 "{}{}{}: {}",
                 termion::cursor::Goto(1, self.height),
                 termion::clear::CurrentLine,
                 input_mode.input,
                 input_mode.output
             )),
+            StatusBarMode::EditorMode(editor_mode) => Ok(format!(
+                "{}{}{}{}{}:{}",
+                termion::cursor::Goto(1, self.height),
+                termion::clear::CurrentLine,
+                editor_mode.file_name,
+                termion::cursor::Goto(self.width - 10, self.height),
+                editor_mode.cursor.0,
+                editor_mode.cursor.1,
+            ))
+            
         }
     }
 
@@ -76,13 +95,14 @@ impl View for StatusBar {
         key: termion::event::Key,
     ) -> Result<HandleInputResult, Box<dyn std::error::Error>> {
         match self.mode {
-            StatusBarMode::AwaitingInput(ref mut input_mode) => {
+            StatusBarMode::InputMode(ref mut input_mode) => {
                 match key {
                     Key::Esc => {
                         self.mode = StatusBarMode::Inactive;
                     }
                     Key::Char('\n') => input_mode.complete = true,
                     Key::Char(c) => {
+                        trace!("Adding char to input {:?}", c);
                         input_mode.output.push(c);
                     }
                     Key::Backspace => {
