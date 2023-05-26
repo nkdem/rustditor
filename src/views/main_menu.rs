@@ -1,4 +1,4 @@
-use std::{error::Error, collections::{VecDeque, HashMap}};
+use std::{error::Error};
 use termion::event::Key;
 
 use crate::views::editor::EditorView;
@@ -23,23 +23,21 @@ impl View for MainMenuView {
     fn handle_input(
         &mut self,
         key: Key,
-    ) -> Result<VecDeque<HandleInputResult>, Box<dyn Error>> {
+    ) -> Result<HandleInputResult, Box<dyn Error>> {
         match key {
             termion::event::Key::Char('o') => {
-                let inputs = vec!["Filename".to_string()];
-                let callback: view::InputHandler = |hashmap| {
-                    let filename = hashmap.get("Filename").unwrap();
-                    if filename.len() > 0 {
-                        Ok(HandleInputResult::singleton(HandleInputResult::View(Box::new(EditorView::new(filename.to_string())))))
+                let callback: view::InputHandler = |filename| {
+                    if !filename.is_empty() {
+                        Ok(HandleInputResult::View(Box::new(EditorView::new(filename))))
                     } else {
-                        Ok(HandleInputResult::singleton(HandleInputResult::Failure))
+                        Ok(HandleInputResult::Failure)
                     }
                 };
 
-                Ok(HandleInputResult::singleton(HandleInputResult::Input(inputs,callback)))
+                Ok(HandleInputResult::Input("Filename".to_string(),callback))
             }
-            termion::event::Key::Char('q') => Ok(HandleInputResult::singleton(HandleInputResult::Quit)),
-            _ => Ok(HandleInputResult::singleton(HandleInputResult::Unhandled)),
+            termion::event::Key::Char('q') => Ok(HandleInputResult::Quit),
+            _ => Ok(HandleInputResult::Unhandled),
         }
     }
 }

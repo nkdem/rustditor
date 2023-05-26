@@ -1,4 +1,4 @@
-use std::{error::Error, collections::VecDeque};
+use std::{error::Error};
 
 use termion::event::Key;
 
@@ -28,14 +28,14 @@ impl View for EditorView {
         Ok(output)
     }
 
-    fn handle_input(&mut self,key: termion::event::Key) -> Result<VecDeque<HandleInputResult>, Box<dyn Error>> {
+    fn handle_input(&mut self,key: termion::event::Key) -> Result<HandleInputResult, Box<dyn Error>> {
         let (width,height) = termion::terminal_size().unwrap();
         match key {
             Key::Ctrl(c) => {
                 match c {
-                    'w' => Ok(HandleInputResult::singleton(HandleInputResult::View(Box::new(MainMenuView)))),
+                    'w' => Ok(HandleInputResult::View(Box::new(MainMenuView))),
                     's' => todo!("Save"),
-                    _ => Ok(HandleInputResult::singleton(HandleInputResult::Unhandled))
+                    _ => Ok(HandleInputResult::Unhandled)
                 }
             }
             Key::Right => {
@@ -45,7 +45,7 @@ impl View for EditorView {
                     self.cursor.0 = 1;
                     self.cursor.1 += 1;
                 }
-                Ok(HandleInputResult::singleton(HandleInputResult::Handled))
+                Ok(HandleInputResult::Handled)
             },
             Key::Left => {
                 if self.cursor.0 > 1 {
@@ -54,7 +54,7 @@ impl View for EditorView {
                     self.cursor.0 = width;
                     self.cursor.1 -= 1;
                 }
-                Ok(HandleInputResult::singleton(HandleInputResult::Handled))
+                Ok(HandleInputResult::Handled)
             },
             Key::Up => {
                 if self.cursor.1 > 1 {
@@ -62,7 +62,7 @@ impl View for EditorView {
                 } else {
                     self.cursor = (1, 1);
                 }
-                Ok(HandleInputResult::singleton(HandleInputResult::Handled))
+                Ok(HandleInputResult::Handled)
             },
             Key::Down => {
                 if self.cursor.1 < height {
@@ -70,9 +70,9 @@ impl View for EditorView {
                 } else {
                     self.cursor = (1,1)
                 }
-                Ok(HandleInputResult::singleton(HandleInputResult::Handled))
+                Ok(HandleInputResult::Handled)
             }
-            _ => Ok(HandleInputResult::singleton(HandleInputResult::Handled))
+            _ => Ok(HandleInputResult::Handled)
         }
     }
 

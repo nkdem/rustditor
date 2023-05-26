@@ -1,17 +1,17 @@
-use std::{error::Error, collections::{HashMap, VecDeque}};
+use std::{error::Error, collections::{VecDeque}};
 
 use termion::event::Key;
 
-pub type InputHandler = fn(HashMap<String, String>) -> Result<VecDeque<HandleInputResult>, Box<dyn Error>>;
+pub type InputHandler = fn(String) -> Result<HandleInputResult, Box<dyn Error>>;
 
 pub enum HandleInputResult {
     Quit,
     Command, // TODO: Implement commands
     View(Box<dyn View>),
-    Input(Vec<String>, InputHandler),
+    Input(String, InputHandler),
     Handled,
     Unhandled,
-    Failure
+    Failure,
 }
 
 impl HandleInputResult {
@@ -23,5 +23,5 @@ impl HandleInputResult {
 
 pub trait View {
     fn generate_rendered_output(&mut self) -> Result<String, Box<dyn Error>>;
-    fn handle_input(&mut self, key: Key) -> Result<VecDeque<HandleInputResult>, Box<dyn Error>>;
+    fn handle_input(&mut self, key: Key) -> Result<HandleInputResult, Box<dyn Error>>;
 }
