@@ -45,12 +45,13 @@ impl Screen {
 
             status_bar.handle_input(key).unwrap();
             let result: HandleInputResult = match status_bar.mode {
-                StatusBarMode::AwaitingInput(_) => {
-                    continue;
+                StatusBarMode::AwaitingInput(ref input_mode) => {
+                    if input_mode.complete {
+                        Some(status_bar.complete_input().unwrap().unwrap())
+                    } else {
+                    continue
+                    }
                 },
-                StatusBarMode::AwaitingCollection => {
-                    Some(status_bar.complete_input().unwrap().unwrap())
-                }
                 _ => {
                     None
                 },
@@ -59,8 +60,10 @@ impl Screen {
                 HandleInputResult::Quit => return Ok(()),
                 HandleInputResult::View(new_view) => {
                     self.active_view = new_view;
-                    if let StatusBarMode::AwaitingCollection = status_bar.mode {
-                        status_bar.reset();
+                    if let StatusBarMode::AwaitingInput(ref input_mode) = status_bar.mode {
+                        if input_mode.complete {
+                            status_bar.reset();
+                        }
                     }
                 }
                 HandleInputResult::Input(ref input, f) => {

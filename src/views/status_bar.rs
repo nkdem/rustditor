@@ -1,23 +1,25 @@
-use std::{error::Error};
+use std::error::Error;
 
-use termion::{event::Key};
+use termion::event::Key;
 
-use super::view::{HandleInputResult, View};
+use super::view::{HandleInputResult, InputHandler, View};
 
-type Input = String;
+pub struct InputMode {
+    pub input: String,
+    pub on_complete: InputHandler,
+    pub output: String,
+    pub complete: bool,
+}
 
 pub struct StatusBar {
     width: u16,
     height: u16,
     pub mode: StatusBarMode,
-    output: String,
-    input_handler: Option<super::view::InputHandler>
 }
 
 pub enum StatusBarMode {
     Inactive,
-    AwaitingInput(Input),
-    AwaitingCollection
+    AwaitingInput(InputMode),
 }
 
 impl StatusBar {
@@ -26,27 +28,31 @@ impl StatusBar {
             width,
             height,
             mode: StatusBarMode::Inactive,
-            output: String::new(),
-            input_handler: None
         }
     }
 
-    pub fn set_input_prompt(&mut self, input: Input, handler: super::view::InputHandler) {
-        self.mode = StatusBarMode::AwaitingInput(input);
-        self.input_handler = Some(handler);
+    pub fn set_input_prompt(&mut self, input: String, handler: super::view::InputHandler) {
+        let input_mode = InputMode {
+            input,
+            on_complete: handler,
+            output: String::new(),
+            complete: false,
+        };
+        self.mode = StatusBarMode::AwaitingInput(input_mode);
     }
 
     pub fn reset(&mut self) {
         self.mode = StatusBarMode::Inactive;
-        self.output.clear();
-        self.input_handler = None;
     }
 
     pub fn complete_input(&mut self) -> Option<Result<HandleInputResult, Box<dyn Error>>> {
-        if let StatusBarMode::AwaitingCollection = self.mode {
-            Some(self.input_handler.unwrap()(self.output.clone()))
-        } else {
-            None
+        match &mut self.mode {
+            StatusBarMode::AwaitingInput(input_mode) => {
+                input_mode.complete = true;
+                let res = (input_mode.on_complete)(input_mode.output.clone());
+                Some(res)
+            }
+            _ => None,
         }
     }
 }
@@ -55,17 +61,12 @@ impl View for StatusBar {
     fn generate_rendered_output(&mut self) -> Result<String, Box<dyn std::error::Error>> {
         match &self.mode {
             StatusBarMode::Inactive => Ok(String::new()),
-            StatusBarMode::AwaitingInput(input) => Ok(format!(
+            StatusBarMode::AwaitingInput(input_mode) => Ok(format!(
                 "{}{}{}: {}",
                 termion::cursor::Goto(1, self.height),
                 termion::clear::CurrentLine,
-                input,
-                self.output
-            )),
-            StatusBarMode::AwaitingCollection => Ok(format!(
-                "{}{}",
-                termion::cursor::Goto(1, self.height),
-                termion::clear::CurrentLine
+                input_mode.input,
+                input_mode.output
             )),
         }
     }
@@ -73,25 +74,20 @@ impl View for StatusBar {
     fn handle_input(
         &mut self,
         key: termion::event::Key,
-    ) -> Result<HandleInputResult,
-        Box<dyn std::error::Error>,
-    > {
+    ) -> Result<HandleInputResult, Box<dyn std::error::Error>> {
         match self.mode {
-            StatusBarMode::AwaitingInput(_) => {
+            StatusBarMode::AwaitingInput(ref mut input_mode) => {
                 match key {
                     Key::Esc => {
                         self.mode = StatusBarMode::Inactive;
-                        self.output.clear(); 
                     }
-                    Key::Char('\n') => {
-                        self.mode = StatusBarMode::AwaitingCollection
-                    }
+                    Key::Char('\n') => input_mode.complete = true,
                     Key::Char(c) => {
-                        self.output.push(c);
+                        input_mode.output.push(c);
                     }
                     Key::Backspace => {
-                        if !self.output.is_empty() {
-                            self.output.pop();
+                        if !input_mode.output.is_empty() {
+                            input_mode.output.pop();
                         }
                     }
                     _ => {}
