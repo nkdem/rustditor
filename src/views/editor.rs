@@ -3,7 +3,7 @@ use std::error::Error;
 use log::trace;
 use termion::event::Key;
 
-use crate::document::Document;
+use crate::{document::Document, views::status_bar::StatusBar};
 
 use super::{view::{HandleInputResult, View}, status_bar::{EditorMode, StatusBarMode}};
 use super::{
@@ -81,10 +81,12 @@ impl View for EditorView {
                     self.cursor.1 += 1;
                 }
                 trace!("Moving cursor \u{2192} [before {:?}] [after {:?}]", old, self.cursor);
-                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
-                    cursor: (self.cursor.0, self.cursor.1),
-                    filename: self.filename.clone(),
-                })))
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(Box::new(|status_bar: &mut StatusBar| {
+                    status_bar.update_editor_mode(EditorMode {
+                        cursor: (self.cursor.0, self.cursor.1),
+                        filename: self.filename.clone(),
+                    })
+                }))))
             }
             Key::Left => {
                 if self.cursor.0 > 1 {
@@ -93,10 +95,12 @@ impl View for EditorView {
                     self.cursor.0 = width;
                     self.cursor.1 -= 1;
                 }
-                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
-                    cursor: (self.cursor.0, self.cursor.1),
-                    filename: self.filename.clone(),
-                })))
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(Box::new(|status_bar: &mut StatusBar| {
+                    status_bar.update_editor_mode(EditorMode {
+                        cursor: (self.cursor.0, self.cursor.1),
+                        filename: self.filename.clone(),
+                    })
+                }))))
             }
             Key::Up => {
                 if self.cursor.1 > 1 {
@@ -104,10 +108,12 @@ impl View for EditorView {
                 } else {
                     self.cursor = (1, 1);
                 }
-                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
-                    cursor: (self.cursor.0, self.cursor.1),
-                    filename: self.filename.clone(),
-                })))
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(Box::new(|status_bar: &mut StatusBar| {
+                    status_bar.update_editor_mode(EditorMode {
+                        cursor: (self.cursor.0, self.cursor.1),
+                        filename: self.filename.clone(),
+                    })
+                }))))
             }
             Key::Down => {
                 if self.cursor.1 < height {
@@ -115,10 +121,12 @@ impl View for EditorView {
                 } else {
                     self.cursor = (1, 1)
                 }
-                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
-                    cursor: (self.cursor.0, self.cursor.1),
-                    filename: self.filename.clone(),
-                })))
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(Box::new(|status_bar: &mut StatusBar| {
+                    status_bar.update_editor_mode(EditorMode {
+                        cursor: (self.cursor.0, self.cursor.1),
+                        filename: self.filename.clone(),
+                    })
+                }))))
             }
             _ => Ok(HandleInputResult::Handled),
         }

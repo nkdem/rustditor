@@ -2,7 +2,7 @@ use std::{error::Error, collections::{VecDeque}};
 
 use termion::event::Key;
 
-use super::status_bar::{StatusBarMode, EditorMode};
+use super::status_bar::{StatusBarMode, EditorMode, StatusBar};
 
 pub type InputHandler = fn(String) -> Result<HandleInputResult, Box<dyn Error>>;
 
@@ -10,7 +10,7 @@ pub enum Request {
     UpdateView(Box<dyn View>),
     InputPrompt(String, InputHandler),
     ChangeStatusBarMode(StatusBarMode),
-    UpdateStatusBar(EditorMode),
+    UpdateStatusBar(Box<dyn FnOnce(&mut StatusBar)>),
 }
 
 pub enum HandleInputResult {

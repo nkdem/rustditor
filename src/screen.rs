@@ -100,8 +100,8 @@ impl Screen {
                             trace!("Changing status bar mode");
                             status_bar.mode = new_mode;
                         }
-                        Request::UpdateStatusBar(e) => {
-                            status_bar.update_editor_mode(e);
+                        Request::UpdateStatusBar(closure) => {
+                            closure(&mut status_bar);
                         }
                     },
                     _ => {}
