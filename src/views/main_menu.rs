@@ -4,7 +4,7 @@ use termion::event::Key;
 use crate::views::editor::EditorView;
 
 use super::{
-    view::{HandleInputResult, View, self},
+    view::{HandleInputResult, View, self, Request},
 };
 
 pub struct MainMenuView;
@@ -28,16 +28,20 @@ impl View for MainMenuView {
             termion::event::Key::Char('o') => {
                 let callback: view::InputHandler = |filename| {
                     if !filename.is_empty() {
-                        Ok(HandleInputResult::View(Box::new(EditorView::new(filename))))
+                        Ok(HandleInputResult::Request(Request::UpdateView(Box::new(EditorView::new(filename)))))
                     } else {
                         Ok(HandleInputResult::Failure)
                     }
                 };
-
-                Ok(HandleInputResult::Input("Filename".to_string(),callback))
+                Ok(HandleInputResult::Request(Request::InputPrompt("Filename".to_string(),callback)))
             }
             termion::event::Key::Char('q') => Ok(HandleInputResult::Quit),
             _ => Ok(HandleInputResult::Unhandled),
         }
     }
+
+    fn init(&self) -> Option<HandleInputResult> {
+        None
+    }
+    
 }

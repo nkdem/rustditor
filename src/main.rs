@@ -1,5 +1,5 @@
-use rustditor::views::{ screen::Screen, main_menu::MainMenuView};
-use log::{trace, LevelFilter};
+use rustditor::{views::{ main_menu::MainMenuView}, screen::Screen};
+use log::{LevelFilter};
 use std::fs::OpenOptions;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

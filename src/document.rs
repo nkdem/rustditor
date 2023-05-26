@@ -16,7 +16,7 @@ impl Document {
         let mut content = String::new();
         file.read_to_string(&mut content).expect("Unable to read file");
         Self {
-            filename: filename.to_string(),
+            filename: filename.clone(),
             file,
             content}
     }

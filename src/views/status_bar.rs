@@ -14,7 +14,7 @@ pub struct InputMode {
 
 pub struct EditorMode {
     pub cursor : (u16, u16), // (x, y)
-    pub file_name: String,
+    pub filename: String,
 }
 
 
@@ -67,28 +67,39 @@ impl StatusBar {
 }
 
 impl View for StatusBar {
+    
+
     fn generate_rendered_output(&mut self) -> Result<String, Box<dyn std::error::Error>> {
         match &self.mode {
             StatusBarMode::Inactive => Ok(String::new()),
             StatusBarMode::InputMode(input_mode) => Ok(format!(
-                "{}{}{}: {}",
+                "{}{}{}{}: {}{}",
+                termion::color::Bg(termion::color::Blue),
                 termion::cursor::Goto(1, self.height),
                 termion::clear::CurrentLine,
                 input_mode.input,
-                input_mode.output
+                input_mode.output,
+                termion::color::Bg(termion::color::Reset),
             )),
-            StatusBarMode::EditorMode(editor_mode) => Ok(format!(
-                "{}{}{}{}{}:{}",
+            StatusBarMode::EditorMode(editor_mode) => {
+                let old_cursor = editor_mode.cursor;
+                Ok(format!(
+                "{}{}{}{}{}{}:{}{}{}",
+                termion::color::Bg(termion::color::White),
                 termion::cursor::Goto(1, self.height),
                 termion::clear::CurrentLine,
-                editor_mode.file_name,
+                editor_mode.filename,
                 termion::cursor::Goto(self.width - 10, self.height),
                 editor_mode.cursor.0,
                 editor_mode.cursor.1,
+                termion::color::Bg(termion::color::Reset),
+                termion::cursor::Goto(old_cursor.0, old_cursor.1),
             ))
+        }
+        }
             
         }
-    }
+    
 
     fn handle_input(
         &mut self,
@@ -116,5 +127,9 @@ impl View for StatusBar {
             }
             _ => Ok(HandleInputResult::Unhandled),
         }
+    }
+
+    fn init(&self) -> Option<HandleInputResult> {
+        None
     }
 }
