@@ -1,11 +1,11 @@
 use std::error::Error;
 
-// use log::trace;
+use log::trace;
 use termion::event::Key;
 
 use crate::document::Document;
 
-use super::view::{HandleInputResult, View};
+use super::{view::{HandleInputResult, View}, status_bar::{EditorMode, StatusBarMode}};
 use super::{
     main_menu::MainMenuView,
     // status_bar::{EditorMode, StatusBarMode},
@@ -33,14 +33,13 @@ impl View for EditorView {
 
     fn init(&self) -> Option<HandleInputResult>{
         // TODO: Need to fix so that cursor are in sync in status_bar and here
-        // let editor_mode = EditorMode {
-        //     cursor: (self.cursor.0, self.cursor.1),
-        //     filename: self.filename.clone(),
-        // };
-        // Some(HandleInputResult::Request(Request::ChangeStatusBarMode(
-        //     StatusBarMode::EditorMode(editor_mode),
-        // )))
-        None
+        let editor_mode = EditorMode {
+            cursor: (self.cursor.0, self.cursor.1),
+            filename: self.filename.clone(),
+        };
+        Some(HandleInputResult::Request(Request::ChangeStatusBarMode(
+            StatusBarMode::EditorMode(editor_mode),
+        )))
     }
 
     fn generate_rendered_output(&mut self) -> Result<String, Box<dyn Error>> {
@@ -74,15 +73,18 @@ impl View for EditorView {
                 _ => Ok(HandleInputResult::Unhandled),
             },
             Key::Right => {
-                // let old = self.cursor;
+                let old = self.cursor;
                 if self.cursor.0 < width {
                     self.cursor.0 += 1;
                 } else {
                     self.cursor.0 = 1;
                     self.cursor.1 += 1;
                 }
-                // trace!("Moving cursor \u{2192} [before {:?}] [after {:?}]", old, self.cursor);
-                Ok(HandleInputResult::Handled)
+                trace!("Moving cursor \u{2192} [before {:?}] [after {:?}]", old, self.cursor);
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
+                    cursor: (self.cursor.0, self.cursor.1),
+                    filename: self.filename.clone(),
+                })))
             }
             Key::Left => {
                 if self.cursor.0 > 1 {
@@ -91,7 +93,10 @@ impl View for EditorView {
                     self.cursor.0 = width;
                     self.cursor.1 -= 1;
                 }
-                Ok(HandleInputResult::Handled)
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
+                    cursor: (self.cursor.0, self.cursor.1),
+                    filename: self.filename.clone(),
+                })))
             }
             Key::Up => {
                 if self.cursor.1 > 1 {
@@ -99,7 +104,10 @@ impl View for EditorView {
                 } else {
                     self.cursor = (1, 1);
                 }
-                Ok(HandleInputResult::Handled)
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
+                    cursor: (self.cursor.0, self.cursor.1),
+                    filename: self.filename.clone(),
+                })))
             }
             Key::Down => {
                 if self.cursor.1 < height {
@@ -107,7 +115,10 @@ impl View for EditorView {
                 } else {
                     self.cursor = (1, 1)
                 }
-                Ok(HandleInputResult::Handled)
+                Ok(HandleInputResult::Request(Request::UpdateStatusBar(EditorMode {
+                    cursor: (self.cursor.0, self.cursor.1),
+                    filename: self.filename.clone(),
+                })))
             }
             _ => Ok(HandleInputResult::Handled),
         }

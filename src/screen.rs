@@ -5,7 +5,7 @@ use std::{
 };
 
 use log::trace;
-use termion::{input::TermRead, raw::IntoRawMode, screen::IntoAlternateScreen};
+use termion::{input::TermRead, raw::IntoRawMode, screen::IntoAlternateScreen, cursor::DetectCursorPos};
 
 use crate::views::{
     status_bar::{StatusBar, StatusBarMode},
@@ -47,7 +47,7 @@ impl Screen {
             write!(
                 self.stdout,
                 "{}",
-                status_bar.generate_rendered_output().unwrap()
+                status_bar.generate_rendered_output().unwrap(),
             )
             .unwrap();
             self.stdout.flush().unwrap();
@@ -99,6 +99,9 @@ impl Screen {
                         Request::ChangeStatusBarMode(new_mode) => {
                             trace!("Changing status bar mode");
                             status_bar.mode = new_mode;
+                        }
+                        Request::UpdateStatusBar(e) => {
+                            status_bar.update_editor_mode(e);
                         }
                     },
                     _ => {}

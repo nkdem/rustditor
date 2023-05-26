@@ -64,6 +64,10 @@ impl StatusBar {
             _ => None,
         }
     }
+
+    pub fn update_editor_mode(&mut self, e : EditorMode) {
+        self.mode = StatusBarMode::EditorMode(e);
+    }
 }
 
 impl View for StatusBar {
